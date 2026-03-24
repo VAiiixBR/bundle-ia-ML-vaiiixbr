@@ -459,8 +459,15 @@ class NewsPriceLearningEngine:
         stored = self.load_headlines()
         live_recent = stored.copy()
         if not live_recent.empty and "timestamp" in live_recent.columns:
+            ts_series = pd.to_datetime(live_recent["timestamp"], errors="coerce", utc=True)
             last_ts = pd.Timestamp(price_df.index[-1])
-            live_recent = live_recent[live_recent["timestamp"] <= last_ts]
+            if last_ts.tzinfo is None:
+                last_ts = last_ts.tz_localize("UTC")
+            else:
+                last_ts = last_ts.tz_convert("UTC")
+            live_recent = live_recent.loc[ts_series.notna()].copy()
+            ts_series = ts_series.loc[ts_series.notna()]
+            live_recent = live_recent[ts_series <= last_ts]
             live_recent = live_recent.tail(max(self.config.min_headlines_to_score, 12))
         return self._build_insight(price_df, live_recent, mode="LIVE_NEWS_LEARNING")
 
