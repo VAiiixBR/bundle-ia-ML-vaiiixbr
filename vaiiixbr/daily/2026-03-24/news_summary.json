@@ -19,22 +19,22 @@
       "negative_hits": 0
     },
     {
-      "timestamp": "Tue, 24 Mar 2026 17:03:27 +0000",
-      "source": "MoneyTimes",
-      "title": "Ranking da B3: Itaúsa (ITSA4) entra no top 10 de ações mais negociadas; veja lista completa",
-      "url": "https://www.moneytimes.com.br/ranking-da-b3-itausa-itsa4-entra-no-top-10-de-acoes-mais-negociadas-veja-lista-completa-igdl/",
-      "asset_direct_match": true,
-      "relevance_score": 1.0,
+      "timestamp": "2026-03-24 18:23:11",
+      "source": "Investing Brasil",
+      "title": "Ações de empresas de pontuação de crédito caem em meio a preocupações com acessibilidade de preços",
+      "url": "https://br.investing.com/news/stock-market-news/acoes-de-empresas-de-pontuacao-de-credito-caem-em-meio-a-preocupacoes-com-acessibilidade-de-precos-93CH-1878884",
+      "asset_direct_match": false,
+      "relevance_score": 0.45,
       "sentiment_score": 0.0,
       "bias": "NEUTRAL",
       "positive_hits": 0,
       "negative_hits": 0
     },
     {
-      "timestamp": "Tue, 24 Mar 2026 16:59:14 +0000",
-      "source": "MoneyTimes",
-      "title": "Fora do ar? Pix apresenta instabilidade e deixa clientes sem acesso em vários bancos",
-      "url": "https://www.moneytimes.com.br/fora-do-ar-pix-apresenta-instabilidade-e-deixa-clientes-sem-acesso-em-varios-bancos-igdl/",
+      "timestamp": "Tue, 24 Mar 2026 18:20:32 +0000",
+      "source": "Seu Dinheiro",
+      "title": "Nem juros nem crédito: bets já são a maior causa de dívidas no Brasil, diz estudo",
+      "url": "https://www.seudinheiro.com/2026/financas-pessoais/nem-juros-nem-credito-bets-ja-sao-a-maior-causa-de-dividas-no-brasil-diz-estudo-giov/",
       "asset_direct_match": false,
       "relevance_score": 0.45,
       "sentiment_score": 0.0,
@@ -65,7 +65,7 @@
     "news_price_score": 0.0,
     "summary": "Sem manchetes relevantes armazenadas para ITUB4."
   },
-  "stored_headlines": 4,
+  "stored_headlines": 0,
   "labeled_headlines": 0,
   "sources": [
     {
