@@ -4,13 +4,49 @@
   "auto_collected": true,
   "source_count": 4,
   "raw_headlines_count": 20,
-  "filtered_headlines_count": 1,
+  "filtered_headlines_count": 4,
   "headlines": [
     {
-      "timestamp": "Tue, 24 Mar 2026 13:42:00 +0000",
+      "timestamp": "Tue, 24 Mar 2026 17:22:00 +0000",
+      "source": "MoneyTimes",
+      "title": "Gestora de ativos Apollo suspende saques de fundo de crédito privado",
+      "url": "https://www.moneytimes.com.br/gestora-de-ativos-apollo-suspende-saques-de-fundo-de-credito-privado/",
+      "asset_direct_match": false,
+      "relevance_score": 0.45,
+      "sentiment_score": 0.0,
+      "bias": "NEUTRAL",
+      "positive_hits": 0,
+      "negative_hits": 0
+    },
+    {
+      "timestamp": "Tue, 24 Mar 2026 17:03:27 +0000",
+      "source": "MoneyTimes",
+      "title": "Ranking da B3: Itaúsa (ITSA4) entra no top 10 de ações mais negociadas; veja lista completa",
+      "url": "https://www.moneytimes.com.br/ranking-da-b3-itausa-itsa4-entra-no-top-10-de-acoes-mais-negociadas-veja-lista-completa-igdl/",
+      "asset_direct_match": true,
+      "relevance_score": 1.0,
+      "sentiment_score": 0.0,
+      "bias": "NEUTRAL",
+      "positive_hits": 0,
+      "negative_hits": 0
+    },
+    {
+      "timestamp": "Tue, 24 Mar 2026 16:59:14 +0000",
+      "source": "MoneyTimes",
+      "title": "Fora do ar? Pix apresenta instabilidade e deixa clientes sem acesso em vários bancos",
+      "url": "https://www.moneytimes.com.br/fora-do-ar-pix-apresenta-instabilidade-e-deixa-clientes-sem-acesso-em-varios-bancos-igdl/",
+      "asset_direct_match": false,
+      "relevance_score": 0.45,
+      "sentiment_score": 0.0,
+      "bias": "NEUTRAL",
+      "positive_hits": 0,
+      "negative_hits": 0
+    },
+    {
+      "timestamp": "Tue, 24 Mar 2026 16:30:00 +0000",
       "source": "Seu Dinheiro",
-      "title": "Não é só inflação: veja por que o BC continua cauteloso com os juros e para onde olhará agora",
-      "url": "https://www.seudinheiro.com/2026/economia/ata-do-copom-bc-mantem-tom-cauteloso-apos-reduzir-juros-saiba-o-que-autoridade-monetaria-olhara-agora-kaes/",
+      "title": "Sinal verde para a Selic: o segredo escondido na ata do Copom que abre as portas para cortes de 0,50 pp nos juros",
+      "url": "https://www.seudinheiro.com/2026/economia/sinal-verde-para-a-selic-o-segredo-escondido-na-ata-do-copom-que-abre-as-portas-para-cortes-de-050-pp-nos-juros-mlim/",
       "asset_direct_match": false,
       "relevance_score": 0.45,
       "sentiment_score": 0.0,
@@ -29,7 +65,7 @@
     "news_price_score": 0.0,
     "summary": "Sem manchetes relevantes armazenadas para ITUB4."
   },
-  "stored_headlines": 1,
+  "stored_headlines": 4,
   "labeled_headlines": 0,
   "sources": [
     {
