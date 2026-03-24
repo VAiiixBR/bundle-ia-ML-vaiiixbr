@@ -13,7 +13,7 @@ import requests
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-from vaiiixbr_standard_itub4_market_news_learning_patched import NewsPriceLearningEngine, NewsResearchConfig
+from vaiiixbr_standard_itub4_market_news_learning import NewsPriceLearningEngine, NewsResearchConfig
 
 APP_NAME = "VAIIIxBR Northflank News Worker v3"
 
