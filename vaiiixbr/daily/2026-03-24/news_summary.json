@@ -1,0 +1,56 @@
+{
+  "date": "2026-03-24",
+  "symbol": "ITUB4",
+  "auto_collected": true,
+  "source_count": 4,
+  "raw_headlines_count": 20,
+  "filtered_headlines_count": 1,
+  "headlines": [
+    {
+      "timestamp": "Tue, 24 Mar 2026 13:42:00 +0000",
+      "source": "Seu Dinheiro",
+      "title": "Não é só inflação: veja por que o BC continua cauteloso com os juros e para onde olhará agora",
+      "url": "https://www.seudinheiro.com/2026/economia/ata-do-copom-bc-mantem-tom-cauteloso-apos-reduzir-juros-saiba-o-que-autoridade-monetaria-olhara-agora-kaes/",
+      "asset_direct_match": false,
+      "relevance_score": 0.45,
+      "sentiment_score": 0.0,
+      "bias": "NEUTRAL",
+      "positive_hits": 0,
+      "negative_hits": 0
+    }
+  ],
+  "insight": {
+    "mode": "LIVE_NEWS_LEARNING",
+    "status": "NO_NEWS_DATA",
+    "headline_count": 0,
+    "labeled_samples": 0,
+    "price_bias": "NEUTRAL",
+    "confidence_adjustment_hint": 0.0,
+    "news_price_score": 0.0,
+    "summary": "Sem manchetes relevantes armazenadas para ITUB4."
+  },
+  "stored_headlines": 1,
+  "labeled_headlines": 0,
+  "sources": [
+    {
+      "name": "InfoMoney",
+      "type": "rss",
+      "url": "https://www.infomoney.com.br/feed/"
+    },
+    {
+      "name": "MoneyTimes",
+      "type": "rss",
+      "url": "https://www.moneytimes.com.br/feed/"
+    },
+    {
+      "name": "Investing Brasil",
+      "type": "rss",
+      "url": "https://br.investing.com/rss/news_25.rss"
+    },
+    {
+      "name": "Seu Dinheiro",
+      "type": "rss",
+      "url": "https://www.seudinheiro.com/feed/"
+    }
+  ]
+}
