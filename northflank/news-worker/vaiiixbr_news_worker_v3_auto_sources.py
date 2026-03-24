@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import base64
@@ -6,6 +5,7 @@ import html
 import json
 import os
 import re
+from datetime import timedelta
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 from urllib.parse import quote_plus, urljoin, urlparse
 from xml.etree import ElementTree as ET
@@ -176,7 +176,7 @@ class NewsSemanticAnalyzer:
 
 
 class FeedCollector:
-    USER_AGENT = "VAIIIxBR-NewsWorker/3.2"
+    USER_AGENT = "VAIIIxBR-NewsWorker/3.3"
 
     def __init__(self, sources: Optional[Sequence[Dict[str, Any]]] = None):
         self.sources = list(sources or SiteRegistry.from_env())
@@ -251,20 +251,21 @@ class FeedCollector:
         href_pat = re.compile(r'<a[^>]+href=["\\\']([^"\\\']+)["\\\'][^>]*>(.*?)</a>', flags=re.IGNORECASE | re.DOTALL)
         out: List[Dict[str, Any]] = []
         seen: set[Tuple[str, str]] = set()
-        source_domain = urlparse(source["url"]).netloc
+        source_domain = (urlparse(source["url"]).netloc or "").lower()
 
         for href, inner in href_pat.findall(html_text):
             text = re.sub(r"<[^>]+>", " ", inner)
-            text = html.unescape(re.sub(r"\\s+", " ", text)).strip()
+            text = html.unescape(re.sub(r"\s+", " ", text)).strip()
             href = html.unescape(href.strip())
             if not text or len(text) < 25:
                 continue
 
             abs_url = urljoin(source["url"], href)
             parsed = urlparse(abs_url)
+            netloc = (parsed.netloc or "").lower()
             if parsed.scheme not in ("http", "https"):
                 continue
-            if parsed.netloc and parsed.netloc not in source_domain and "google.com" not in parsed.netloc:
+            if netloc and not (netloc == source_domain or netloc.endswith(f".{source_domain}") or "google.com" in netloc):
                 continue
 
             key = (text.lower(), abs_url)
@@ -287,7 +288,7 @@ class FeedCollector:
         out: List[Dict[str, Any]] = []
         seen_titles = set()
         for row in rows:
-            title_key = re.sub(r"\\s+", " ", (row.get("title") or "").strip().lower())
+            title_key = re.sub(r"\s+", " ", (row.get("title") or "").strip().lower())
             if not title_key or title_key in seen_titles:
                 continue
             seen_titles.add(title_key)
@@ -300,7 +301,7 @@ GITHUB = GitHubRepoSync()
 ANALYZER = NewsSemanticAnalyzer()
 COLLECTOR = FeedCollector()
 
-app = FastAPI(title=APP_NAME, version="3.2.0")
+app = FastAPI(title=APP_NAME, version="3.3.0")
 
 
 class Candle(BaseModel):
@@ -332,6 +333,8 @@ class AutoCollectRequest(BaseModel):
     export_daily: bool = False
     max_items_per_source: int = 20
     keep_only_relevant: bool = True
+    days_back: int = 10
+    include_undated: bool = False
 
 
 def candles_to_df(candles: List[Candle]) -> pd.DataFrame:
@@ -341,6 +344,29 @@ def candles_to_df(candles: List[Candle]) -> pd.DataFrame:
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     df = df.dropna(subset=["timestamp"]).set_index("timestamp").sort_index()
     return df[["open", "high", "low", "close", "volume"]]
+
+
+def filter_headlines_by_days(rows: List[Dict[str, Any]], days_back: int = 10, include_undated: bool = False) -> List[Dict[str, Any]]:
+    if days_back <= 0:
+        return list(rows)
+
+    now = pd.Timestamp.utcnow().tz_localize(None)
+    cutoff = now - timedelta(days=int(days_back))
+    filtered: List[Dict[str, Any]] = []
+
+    for row in rows:
+        raw_ts = row.get("timestamp")
+        parsed_ts = pd.to_datetime(raw_ts, errors="coerce", utc=True)
+        if pd.isna(parsed_ts):
+            if include_undated:
+                filtered.append(row)
+            continue
+        normalized = parsed_ts.tz_convert(None)
+        if normalized >= cutoff:
+            item = dict(row)
+            item["timestamp"] = normalized.isoformat()
+            filtered.append(item)
+    return filtered
 
 
 def analyze_headlines(rows: List[Dict[str, Any]], keep_only_relevant: bool = True) -> List[Dict[str, Any]]:
@@ -422,7 +448,8 @@ def ingest(req: NewsBatchRequest) -> Dict[str, Any]:
 def auto_collect(req: AutoCollectRequest) -> Dict[str, Any]:
     df = candles_to_df(req.candles)
     fetched = COLLECTOR.fetch_all(max_items_per_source=req.max_items_per_source)
-    analyzed = analyze_headlines(fetched, keep_only_relevant=req.keep_only_relevant)
+    time_filtered = filter_headlines_by_days(fetched, days_back=req.days_back, include_undated=req.include_undated)
+    analyzed = analyze_headlines(time_filtered, keep_only_relevant=req.keep_only_relevant)
     engine_result = run_engine(df, analyzed, req.mode)
     export_result = None
     if req.export_daily:
@@ -430,11 +457,24 @@ def auto_collect(req: AutoCollectRequest) -> Dict[str, Any]:
             "auto_collected": True,
             "source_count": len(COLLECTOR.sources),
             "raw_headlines_count": len(fetched),
+            "time_filtered_headlines_count": len(time_filtered),
             "filtered_headlines_count": len(analyzed),
+            "days_back": req.days_back,
+            "include_undated": req.include_undated,
             "headlines": analyzed,
             "insight": engine_result["insight"],
             "stored_headlines": engine_result["stored_headlines"],
             "labeled_headlines": engine_result["labeled_headlines"],
             "sources": COLLECTOR.sources,
         })
-    return {"ok": True, "source_count": len(COLLECTOR.sources), "raw_headlines_count": len(fetched), "filtered_headlines_count": len(analyzed), **engine_result, "github_export": export_result}
+    return {
+        "ok": True,
+        "source_count": len(COLLECTOR.sources),
+        "raw_headlines_count": len(fetched),
+        "time_filtered_headlines_count": len(time_filtered),
+        "filtered_headlines_count": len(analyzed),
+        "days_back": req.days_back,
+        "include_undated": req.include_undated,
+        **engine_result,
+        "github_export": export_result,
+    }
