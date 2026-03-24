@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import base64
@@ -24,7 +23,7 @@ APP_NAME = "VAIIIxBR Northflank Service"
 BASE_DIR = Path(__file__).resolve().parent
 DASHBOARD_PATH = BASE_DIR / "dashboard.html"
 
-app = FastAPI(title=APP_NAME, version="3.1.0")
+app = FastAPI(title=APP_NAME, version="3.3.0")
 
 
 class GitHubArtifactsClient:
@@ -100,8 +99,7 @@ def candles_to_df(candles: List[Candle]) -> pd.DataFrame:
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard() -> HTMLResponse:
-    html = DASHBOARD_PATH.read_text(encoding="utf-8")
-    return HTMLResponse(content=html)
+    return HTMLResponse(DASHBOARD_PATH.read_text(encoding="utf-8"))
 
 
 @app.get("/health")
@@ -113,20 +111,36 @@ def health() -> Dict[str, Any]:
 def status() -> Dict[str, Any]:
     stats = GITHUB.get_json("vaiiixbr/artifacts/stats.json") if GITHUB.enabled else None
     latest_news = TRADER.research_engine.latest_insight()
+    action = latest_news.get("price_bias", "NEUTRAL")
+    if action == "UP_BIAS":
+        action_display = "COMPRA"
+    elif action == "DOWN_BIAS":
+        action_display = "VENDA"
+    else:
+        action_display = "NEUTRO"
+
+    metrics = TRADER.metrics()
+
     return {
         "ok": True,
         "symbol": "ITUB4",
         "mode": getattr(TRADER, "last_mode", "UNKNOWN"),
-        "metrics": TRADER.metrics(),
+        "metrics": metrics,
         "latest_news_insight": latest_news,
         "colab_artifact_stats": stats,
         "dashboard_state": {
-            "action": latest_news.get("price_bias", "NEUTRAL"),
+            "action": action_display,
+            "raw_action": action,
             "confidence_hint": latest_news.get("confidence_adjustment_hint", 0.0),
             "news_score": latest_news.get("news_price_score", 0.0),
             "status": latest_news.get("status", "UNKNOWN"),
             "headline_count": latest_news.get("headline_count", 0),
             "summary": latest_news.get("summary", ""),
+            "learned_tokens": latest_news.get("learned_tokens", 0),
+            "mode": getattr(TRADER, "last_mode", "UNKNOWN"),
+            "model_samples": (stats or {}).get("samples", 0) if isinstance(stats, dict) else 0,
+            "positive_rate": (stats or {}).get("positive_rate", 0.0) if isinstance(stats, dict) else 0.0,
+            "news_bias": latest_news.get("price_bias", "NEUTRAL"),
         }
     }
 
