@@ -4,11 +4,13 @@ from __future__ import annotations
 import base64
 import json
 import os
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import requests
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from vaiiixbr_standard_itub4_market_news_learning import (
@@ -19,7 +21,10 @@ from vaiiixbr_standard_itub4_market_news_learning import (
 )
 
 APP_NAME = "VAIIIxBR Northflank Service"
-app = FastAPI(title=APP_NAME, version="3.0.0")
+BASE_DIR = Path(__file__).resolve().parent
+DASHBOARD_PATH = BASE_DIR / "dashboard.html"
+
+app = FastAPI(title=APP_NAME, version="3.1.0")
 
 
 class GitHubArtifactsClient:
@@ -49,22 +54,6 @@ class GitHubArtifactsClient:
         content = base64.b64decode(payload["content"]).decode("utf-8")
         return json.loads(content)
 
-    def put_json(self, path: str, data: Dict[str, Any], message: str) -> Dict[str, Any]:
-        if not self.enabled:
-            return {"ok": False, "reason": "github_sync_disabled"}
-        current = requests.get(f"{self.base_url}/{path}", headers=self._headers(), timeout=30)
-        sha = current.json().get("sha") if current.status_code == 200 else None
-        body: Dict[str, Any] = {
-            "message": message,
-            "branch": self.branch,
-            "content": base64.b64encode(json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")).decode("utf-8"),
-        }
-        if sha:
-            body["sha"] = sha
-        r = requests.put(f"{self.base_url}/{path}", headers=self._headers(), json=body, timeout=30)
-        r.raise_for_status()
-        return {"ok": True, "path": path}
-
 
 TRADER = MarketAwareVAIIIxBRPaperTrader(
     config=HybridConfig(symbol="ITUB4"),
@@ -89,7 +78,7 @@ class Candle(BaseModel):
 
 
 class Headline(BaseModel):
-    timestamp: str
+    timestamp: Optional[str] = None
     source: Optional[str] = None
     title: str
     url: Optional[str] = None
@@ -109,6 +98,12 @@ def candles_to_df(candles: List[Candle]) -> pd.DataFrame:
     return df[["open", "high", "low", "close", "volume"]]
 
 
+@app.get("/", response_class=HTMLResponse)
+def dashboard() -> HTMLResponse:
+    html = DASHBOARD_PATH.read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
+
+
 @app.get("/health")
 def health() -> Dict[str, Any]:
     return {"ok": True, "service": APP_NAME, "github_enabled": GITHUB.enabled}
@@ -117,13 +112,22 @@ def health() -> Dict[str, Any]:
 @app.get("/status")
 def status() -> Dict[str, Any]:
     stats = GITHUB.get_json("vaiiixbr/artifacts/stats.json") if GITHUB.enabled else None
+    latest_news = TRADER.research_engine.latest_insight()
     return {
         "ok": True,
         "symbol": "ITUB4",
         "mode": getattr(TRADER, "last_mode", "UNKNOWN"),
         "metrics": TRADER.metrics(),
-        "latest_news_insight": TRADER.research_engine.latest_insight(),
+        "latest_news_insight": latest_news,
         "colab_artifact_stats": stats,
+        "dashboard_state": {
+            "action": latest_news.get("price_bias", "NEUTRAL"),
+            "confidence_hint": latest_news.get("confidence_adjustment_hint", 0.0),
+            "news_score": latest_news.get("news_price_score", 0.0),
+            "status": latest_news.get("status", "UNKNOWN"),
+            "headline_count": latest_news.get("headline_count", 0),
+            "summary": latest_news.get("summary", ""),
+        }
     }
 
 
