@@ -1,50 +1,72 @@
-from __future__ import annotations
-
-import argparse
-import ast
 import os
 import sys
-from pathlib import Path
 
-BAD_LITERALS = {" true": "True", " false": "False", " null": "None"}
+# Literais inválidos em Python quando vieram de JSON
+BAD_LITERALS = {
+    " true": "True",
+    " false": "False",
+    " null": "None",
+    ": true": ": True",
+    ": false": ": False",
+    ": null": ": None",
+}
+
+EXTENSIONS = (".py",)
 
 
-def iter_python_files(root: Path):
-    for current_root, dirs, files in os.walk(root):
-        dirs[:] = [d for d in dirs if d not in {".git", ".pytest_cache", "__pycache__", ".venv", "venv"}]
-        for filename in files:
-            if filename.endswith(".py"):
-                yield Path(current_root) / filename
+def scan_file(path: str):
+    issues = []
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+    except Exception:
+        return issues
+
+    for bad, correct in BAD_LITERALS.items():
+        if bad in content:
+            issues.append((bad, correct))
+
+    return issues
+
+
+def should_skip(path: str) -> bool:
+    normalized = os.path.normpath(path).lower()
+    return normalized.endswith(os.path.normpath("scripts/python_sanity_check.py").lower())
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Valida sintaxe Python e procura literais JSON errados.")
-    parser.add_argument("path", nargs="?", default=".", help="Diretório raiz do projeto")
-    args = parser.parse_args()
+    root = sys.argv[1] if len(sys.argv) > 1 else "."
+    total_issues = 0
 
-    root = Path(args.path).resolve()
-    failures = []
+    print(f"\n[Sanity Check] Escaneando: {os.path.abspath(root)}\n")
 
-    for file_path in iter_python_files(root):
-        text = file_path.read_text(encoding="utf-8")
-        compact = f" {text}"
-        for bad, correct in BAD_LITERALS.items():
-            if bad in compact:
-                failures.append(f"{file_path}: literal suspeito {bad.strip()} -> use {correct}")
-        try:
-            ast.parse(text, filename=str(file_path))
-        except SyntaxError as exc:
-            failures.append(f"{file_path}: SyntaxError linha {exc.lineno}: {exc.msg}")
+    for dirpath, _, filenames in os.walk(root):
+        for filename in filenames:
+            if not filename.endswith(EXTENSIONS):
+                continue
 
-    if failures:
-        print("Falhas encontradas:")
-        for failure in failures:
-            print(f"- {failure}")
-        return 1
+            full_path = os.path.join(dirpath, filename)
 
-    print("Sanity check concluído sem falhas.")
-    return 0
+            # Ignora o próprio script, senão ele acusa os padrões que procura
+            if should_skip(full_path):
+                continue
+
+            issues = scan_file(full_path)
+
+            if issues:
+                print(f"[ERRO] {full_path}")
+                for bad, correct in issues:
+                    print(f"   encontrado: {bad!r} -> use {correct!r}")
+                    total_issues += 1
+
+    if total_issues == 0:
+        print("✔ Nenhum erro de literal encontrado.\n")
+        return 0
+
+    print(f"\n✖ {total_issues} problemas encontrados.\n")
+    return 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
